@@ -101,6 +101,11 @@ int main() {
           double steer_value;
           double throttle_value;
 
+          auto coeffs = polyfit(ptsx, ptsy, 1);
+          
+          double cte = polyeval(coeffs, x) - y;
+
+
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
