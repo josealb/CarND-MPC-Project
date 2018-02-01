@@ -6,6 +6,8 @@
 #include <vector>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
+#include "Eigen-3.3/Eigen/Dense"
+
 #include "MPC.h"
 #include "json.hpp"
 
@@ -98,14 +100,44 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
+          //Transform coordinates from map space to car space. Code by Junjie_Jin on discuss
+          Eigen::Matrix3f T;
+          Eigen::Vector3f P;
+          for (int i = 0; i < ptsx.size(); i++ )
+          {
+          // Transform matrix from global to vehicle
+          T << cos(psi), -sin(psi), px,
+          sin(psi), cos(psi), py,
+          0,0,1;
+          P << ptsx[i], ptsy[i], 1;
+          // Transform matrix from vehicle to global x position in global map.
+          Eigen::Vector3f trans_p = T.inverse()*P;
+          ptsx[i] = trans_p[0];
+          ptsy[i] = trans_p[1];
+          }
+
+
           double steer_value;
           double throttle_value;
 
-          auto coeffs = polyfit(ptsx, ptsy, 1);
+          Eigen::VectorXd xvals = Eigen::VectorXd::Map(ptsx.data(), ptsx.size());
+          Eigen::VectorXd yvals = Eigen::VectorXd::Map(ptsy.data(), ptsy.size());
+
+
+          auto coeffs = polyfit(xvals, yvals, 3);
           
-          double cte = polyeval(coeffs, x) - y;
+          double cte = polyeval(coeffs, px) - py;
+          double epsi = psi - atan(coeffs[1]);
 
+          Eigen::VectorXd state(6);
+          state << px, py, psi, v, cte, epsi;
+          
+          auto vars = mpc.Solve(state, coeffs);
+          double delta_val = vars[6];
+          double a_val = vars[7];
 
+          steer_value = delta_val / deg2rad(25) * -1;
+          throttle_value = a_val;
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
@@ -125,6 +157,9 @@ int main() {
           //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
+
+          next_x_vals = ptsx;
+          next_y_vals = ptsy;
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
