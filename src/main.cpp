@@ -89,6 +89,8 @@ int main() {
           // j[1] is the data JSON object
           vector<double> ptsx = j[1]["ptsx"];
           vector<double> ptsy = j[1]["ptsy"];
+          vector<double> ptsx_car = j[1]["ptsx"];
+          vector<double> ptsy_car = j[1]["ptsy"];
           double px = j[1]["x"];
           double py = j[1]["y"];
           double psi = j[1]["psi"];
@@ -100,6 +102,8 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
+
+          /*
           //Transform coordinates from map space to car space. Code by Junjie_Jin on discuss
           Eigen::Matrix3f T;
           Eigen::Vector3f P;
@@ -115,18 +119,28 @@ int main() {
           ptsx[i] = trans_p[0];
           ptsy[i] = trans_p[1];
           }
+*/
 
+          //Transform
+          for (int i=0; i< ptsx.size();i++){
+            double x = ptsx[i] - px;
+            double y = ptsy[i] - py; 
+            ptsx_car[i] = x * cos(-psi) - y * sin(-psi);
+            ptsy_car[i] = x * sin(-psi) + y * cos(-psi);
+          }
+         
 
           double steer_value;
           double throttle_value;
 
-          Eigen::VectorXd xvals = Eigen::VectorXd::Map(ptsx.data(), ptsx.size());
-          Eigen::VectorXd yvals = Eigen::VectorXd::Map(ptsy.data(), ptsy.size());
+          Eigen::VectorXd xvals = Eigen::VectorXd::Map(ptsx_car.data(), ptsx.size());
+          Eigen::VectorXd yvals = Eigen::VectorXd::Map(ptsy_car.data(), ptsy.size());
 
 
           auto coeffs = polyfit(xvals, yvals, 3);
           
-          double cte = polyeval(coeffs, px) - py;
+          //double cte = polyeval(coeffs, px) - py;
+          double cte = polyeval(coeffs, 0);
           double epsi = psi - atan(coeffs[1]);
 
           Eigen::VectorXd state(6);
@@ -158,8 +172,8 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          next_x_vals = ptsx;
-          next_y_vals = ptsy;
+          next_x_vals = ptsx_car;
+          next_y_vals = ptsy_car;
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
