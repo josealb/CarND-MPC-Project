@@ -139,12 +139,13 @@ int main() {
 
           auto coeffs = polyfit(xvals, yvals, 3);
           
-          //double cte = polyeval(coeffs, px) - py;
           double cte = polyeval(coeffs, 0);
-          double epsi = psi - atan(coeffs[1]);
+          //double epsi = psi - atan(coeffs[1]);
+          double epsi = 0 - atan(coeffs[1]);
 
           Eigen::VectorXd state(6);
-          state << px, py, psi, v, cte, epsi;
+          //state << px, py, psi, v, cte, epsi;
+          state << 0, 0, 0, v, cte, epsi;
           
           auto vars = mpc.Solve(state, coeffs);
           double delta_val = vars[6];
@@ -193,7 +194,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          this_thread::sleep_for(chrono::milliseconds(100));
+          //this_thread::sleep_for(chrono::milliseconds(100));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
