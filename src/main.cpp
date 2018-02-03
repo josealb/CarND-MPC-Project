@@ -72,7 +72,6 @@ int main() {
 
   // MPC is initialized here!
   MPC mpc;
-
   h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -95,6 +94,8 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double delta = j[1]["steering_angle"];
+          double acceleration = j[1]["throttle"];
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -103,50 +104,41 @@ int main() {
           *
           */
 
-          /*
-          //Transform coordinates from map space to car space. Code by Junjie_Jin on discuss
-          Eigen::Matrix3f T;
-          Eigen::Vector3f P;
-          for (int i = 0; i < ptsx.size(); i++ )
-          {
-          // Transform matrix from global to vehicle
-          T << cos(psi), -sin(psi), px,
-          sin(psi), cos(psi), py,
-          0,0,1;
-          P << ptsx[i], ptsy[i], 1;
-          // Transform matrix from vehicle to global x position in global map.
-          Eigen::Vector3f trans_p = T.inverse()*P;
-          ptsx[i] = trans_p[0];
-          ptsy[i] = trans_p[1];
-          }
-*/
+          
+          //Add latency
+          // predict state in 100ms
+          double latency = 0; 
+          double Lf = 2.67;
+          v *= 0.44704;                             // convert from mph to m/s
+          px = px + v*cos(psi)*latency;
+          py = py + v*sin(psi)*latency;
+          psi = psi + v*delta/Lf*latency;
+          v = v + acceleration*latency;
+          
 
           //Transform
-          for (int i=0; i< ptsx.size();i++){
+          for (unsigned int i=0; i< ptsx.size();i++){
             double x = ptsx[i] - px;
             double y = ptsy[i] - py; 
             ptsx_car[i] = x * cos(-psi) - y * sin(-psi);
             ptsy_car[i] = x * sin(-psi) + y * cos(-psi);
           }
          
-
           double steer_value;
           double throttle_value;
 
           Eigen::VectorXd xvals = Eigen::VectorXd::Map(ptsx_car.data(), ptsx.size());
           Eigen::VectorXd yvals = Eigen::VectorXd::Map(ptsy_car.data(), ptsy.size());
 
-
           auto coeffs = polyfit(xvals, yvals, 3);
-          
+
           double cte = polyeval(coeffs, 0);
           //double epsi = psi - atan(coeffs[1]);
-          double epsi = 0 - atan(coeffs[1]);
+          double epsi = 0- atan(coeffs[1]+2*coeffs[2]*px+3*coeffs[3]*px*px);
 
           Eigen::VectorXd state(6);
           //state << px, py, psi, v, cte, epsi;
           state << 0, 0, 0, v, cte, epsi;
-          
           auto vars = mpc.Solve(state, coeffs);
 
           double a_val = vars.back();
@@ -166,7 +158,7 @@ int main() {
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
 
-          for (int i=0;i<vars.size();i++)
+          for (unsigned int i=0;i<vars.size();i++)
           {
             mpc_x_vals.push_back(vars[i]);
             mpc_y_vals.push_back(vars[i+1]);
