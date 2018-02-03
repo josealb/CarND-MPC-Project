@@ -103,20 +103,11 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-
           
-          //Add latency
-          // predict state in 100ms
-          double latency = 0.1; 
-          double Lf = 2.67;
-          v *= 0.44704;                             // convert from mph to m/s
-          px = px + v*cos(psi)*latency;
-          py = py + v*sin(psi)*latency;
-          psi = psi + v*delta/Lf*latency;
-          v = v + acceleration*latency;
-          v /= 0.44704;
 
           //Transform
+
+          
           for (unsigned int i=0; i< ptsx.size();i++){
             double x = ptsx[i] - px;
             double y = ptsy[i] - py; 
@@ -135,10 +126,19 @@ int main() {
           double cte = polyeval(coeffs, 0);
           //double epsi = psi - atan(coeffs[1]);
           double epsi = 0- atan(coeffs[1]+2*coeffs[2]*px+3*coeffs[3]*px*px);
+          double epsi0 = -atan(coeffs[1]);
 
           Eigen::VectorXd state(6);
-          //state << px, py, psi, v, cte, epsi;
-          state << 0, 0, 0, v, cte, epsi;
+          double delay = 0.1;
+          double Lf = 2.67;
+          double x_delay = v * delay;
+          double y_delay = 0;
+          double psi_delay = -v*delay*delta/Lf;
+          double v_delay = v + acceleration * delay;
+          double cte_delay = cte + (v * sin(epsi0) * delay);
+          double epsi_delay = epsi0 - (v * atan(coeffs[1] * delay / Lf));
+
+          state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;
           auto vars = mpc.Solve(state, coeffs);
 
           double a_val = vars.back();
