@@ -1,3 +1,0 @@
-/home/josealb/repos/Self_Driving_Car_NanoDegree/Term2/CarND-MPC-Project/Debug/CMakeFiles/edit_cache.dir
-/home/josealb/repos/Self_Driving_Car_NanoDegree/Term2/CarND-MPC-Project/Debug/CMakeFiles/rebuild_cache.dir
-/home/josealb/repos/Self_Driving_Car_NanoDegree/Term2/CarND-MPC-Project/Debug/CMakeFiles/mpc.dir
