@@ -106,8 +106,6 @@ int main() {
           
 
           //Transform
-
-          
           for (unsigned int i=0; i< ptsx.size();i++){
             double x = ptsx[i] - px;
             double y = ptsy[i] - py; 
@@ -124,11 +122,11 @@ int main() {
           auto coeffs = polyfit(xvals, yvals, 3);
 
           double cte = polyeval(coeffs, 0);
-          //double epsi = psi - atan(coeffs[1]);
-          double epsi = 0- atan(coeffs[1]+2*coeffs[2]*px+3*coeffs[3]*px*px);
           double epsi0 = -atan(coeffs[1]);
 
           Eigen::VectorXd state(6);
+
+          //Take delay into account
           double delay = 0.1;
           double Lf = 2.67;
           double x_delay = v * delay;
