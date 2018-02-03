@@ -11,7 +11,7 @@ using CppAD::AD;
 // We set the number of timesteps to 25
 // and the timestep evaluation frequency or evaluation
 // period to 0.05.
-size_t N = 25;
+size_t N = 5;
 double dt = 0.05;
 
 // This value assumes the model presented in the classroom is used.
@@ -251,8 +251,14 @@ vector<double> MPC::Solve(Eigen::VectorXd x0, Eigen::VectorXd coeffs) {
 
   auto cost = solution.obj_value;
   std::cout << "Cost " << cost << std::endl;
-  return {solution.x[x_start + 1],   solution.x[y_start + 1],
-          solution.x[psi_start + 1], solution.x[v_start + 1],
-          solution.x[cte_start + 1], solution.x[epsi_start + 1],
-          solution.x[delta_start],   solution.x[a_start]};
+
+  vector<double> result;
+  for (int i=0;i<N*2;i++){
+    result.push_back(solution.x[x_start+i]);
+    result.push_back(solution.x[y_start+i]);
+  }
+  result.push_back(solution.x[delta_start]);
+  result.push_back(solution.x[a_start]);
+
+  return result;
 }
