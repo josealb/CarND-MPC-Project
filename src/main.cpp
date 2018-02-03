@@ -107,14 +107,14 @@ int main() {
           
           //Add latency
           // predict state in 100ms
-          double latency = 0; 
+          double latency = 0.1; 
           double Lf = 2.67;
           v *= 0.44704;                             // convert from mph to m/s
           px = px + v*cos(psi)*latency;
           py = py + v*sin(psi)*latency;
           psi = psi + v*delta/Lf*latency;
           v = v + acceleration*latency;
-          
+          v /= 0.44704;
 
           //Transform
           for (unsigned int i=0; i< ptsx.size();i++){
@@ -196,7 +196,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          //this_thread::sleep_for(chrono::milliseconds(100));
+          this_thread::sleep_for(chrono::milliseconds(100));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
