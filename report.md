@@ -10,7 +10,17 @@ The goal of this project is to make a car go around the simulated track using Mo
 Model Predictive Control is a technique for controlling a robot using a model of the robot, its actuators and its contraints. The controller is given a desired path and it solves a minimization problem planning the current and future use of actuators that minimizes the difference between the desired path and the real path.
 
 ## The model
-MPC needs a model of the car to operate. The model consists mainly of constraints on how the vehicle operates, and a cost function that models what characteristics of the trajectory we value most.
+MPC needs a model of the car to operate. The model consists of the basic kinematic equations, constraints on how the vehicle operates, and a cost function that models what characteristics of the trajectory we value most.
+
+### Kinematic equations
+
+    x[t+1] = x[t] * v[t] * cos(psi[t])*dt
+    
+    y[t+1] = y[t] * v[t] * sin(psi[t])*dt
+    
+    psi[t+1] = psi[t] + v[t]/Lf * delta * dt
+    
+    v[t+1] = v[t] * a[t] * dt
 
 ### State vector
 We feed our controller a state vector that describes the state of the car using the following variables:
@@ -87,6 +97,11 @@ These equations make the solver try to keep a more constant path. This would mak
 
 ### Choice of N and dt values
 Our solver must use a discrete path prediction and we can choose 2 parameters. How many future steps we want to predict, and what is the time difference between the two.
+* The value N determines how many steps in the future our car plans. A too small value here would make the car focus only on the short term path and not plan well for curves. A value too large here would make our model computationally inefficient.
+* The value dt teremines the temporal resolution of our model. We want a resolution that is high enough to allow for smooth control, but not so high that basically nothing happens between timesteps.
+* The planning horizon comes from N*dt. The larger the value the more our car plans forward in time.
+* We can also multiply the planning horizon times the velocity (N*dt*v) to see how many meters forward our vehicle is planning. We don't want to plan longer than the reference path since the vehicle wouldn't know what to plan and it would be a waste of computational resources.
+
 I tried N=20 and dt=0.05 for most of the project, but I was having trouble with latency, so I decided to change it to N=10 and dt = 0.1
 Planning much longer results in the estimated path going further than the reference path given by the simulator and gives strange results, as reported by some users on the forums.
 
@@ -118,7 +133,7 @@ Finally, because there is a delay between the solution and the actuation in the 
           double psi_delay = -v*delay*delta/Lf;
           double v_delay = v + acceleration * delay;
           double cte_delay = cte + (v * sin(epsi0) * delay);
-          double epsi_delay = epsi0 - (v * atan(coeffs[1] * delay / Lf));
+          double epsi_delay = epsi0 + (v * delta * delay / Lf);
 
 
 Thank you for reading
