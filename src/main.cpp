@@ -134,7 +134,7 @@ int main() {
           double psi_delay = -v*delay*delta/Lf;
           double v_delay = v + acceleration * delay;
           double cte_delay = cte + (v * sin(epsi0) * delay);
-          double epsi_delay = epsi0 - (v * atan(coeffs[1] * delay / Lf));
+          double epsi_delay = epsi0 + (v * delta * delay / Lf);
 
           state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;
           auto vars = mpc.Solve(state, coeffs);
