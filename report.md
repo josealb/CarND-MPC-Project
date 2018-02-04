@@ -30,33 +30,32 @@ Constraints are expressed as an equation that the solver must keep at zero. We w
 
 #### Constraints of linear movement
 
-fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
-fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
+    fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
+    fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
 
 These constraints state that the position at t+1 must be equal to the position at t, extrapolated in a straight line to the present time.
 #### Constraint of yaw change
 
-fg[1 + psi_start + t] = psi1 - (psi0 + v0 * delta0 / Lf * dt);
+    fg[1 + psi_start + t] = psi1 - (psi0 + v0 * delta0 / Lf * dt);
 
 This constraint limits how fast the car can change its angle. It is limited by the steering input divided by the factor Lf. The factor Lf is a measure of how far the steering is from the center of mass of the vehicle.
 This constraint is a physical limitation of how the car can turn
 
 #### Constraint of acceleration
 
-fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
+    fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
 
 Again, a constraint for linearly accelerated movement. Velocity at t+1 equals velocity at T plus acceleration times the amount of time between timesteps.
 
 #### Constraint of CTE
 
-fg[1 + cte_start + t] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
+    fg[1 + cte_start + t] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
 
 This equation calculates the cross track error at timestep t+1. It is equal to the CTE at t plus the velocity component perpendicular to the track times delta t.
 
 #### Constraint of yaw error
 
-fg[1 + epsi_start + t] =
-          epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
+    fg[1 + epsi_start + t] = epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
 
 This constraint refers to the error between the desired and actual yaw. It must update in the same way as the constraint of yaw change explained before
 
@@ -66,23 +65,23 @@ The cost function refers to the characteristics we value most of our designed tr
 
 #### Difference to the reference state
 
-fg[0] += 1000*CppAD::pow(vars[cte_start + t], 2);
-fg[0] += 1000*CppAD::pow(vars[epsi_start + t], 2);
-fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
+    fg[0] += 1000*CppAD::pow(vars[cte_start + t], 2);
+    fg[0] += 1000*CppAD::pow(vars[epsi_start + t], 2);
+    fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
 
 The distance between the car and the track center, the difference between the desired and actual yaw and the difference between desired and actual velocity.
 The first two are multiplied by a factor of 1000 to make the solver more aggresive in reducing these errors. 
 
 #### Minimize use of actuators
 
-fg[0] += 40*CppAD::pow(vars[delta_start + t], 2);
-fg[0] += 40*CppAD::pow(vars[a_start + t], 2);
+    fg[0] += 40*CppAD::pow(vars[delta_start + t], 2);
+    fg[0] += 40*CppAD::pow(vars[a_start + t], 2);
 
 This just puts the amount of actuator input into the cost function. The car should try to steer as little as possible
 
 #### Minimize value gap between sequential actuations
-fg[0] += 170000*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2); 
-fg[0] += 5000*CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+    fg[0] += 170000*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2); 
+    fg[0] += 5000*CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
 
 These equations make the solver try to keep a more constant path. This would make for a more comfortable drive in a self driving car.
 
@@ -111,7 +110,7 @@ A third order polynomial is then fitted using the polyfit function. If the track
           
 Finally, because there is a delay between the solution and the actuation in the simulator, we need to actually get the solution for a car 100ms further. To do this, the position of the car is extrapolated by 100ms before creating the state vector for the solver. This happens using the following code
 
- //Take delay into account
+          //Take delay into account
           double delay = 0.1;
           double Lf = 2.67;
           double x_delay = v * delay;
